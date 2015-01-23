@@ -1,0 +1,4 @@
+module.exports = {
+  database: 'postgress://<user>:<password>@<host>:5432/jrf-api'
+}
+
