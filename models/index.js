@@ -1,41 +1,99 @@
 "use strict";
 
-var fs        = require("fs");
-var path      = require("path");
-var Sequelize = require("sequelize");
-var basename  = path.basename(module.filename);
 var env       = process.env.NODE_ENV || "development";
 var config    = require(__dirname + '/../config/config.json')[env];
-var sequelize = new Sequelize(config.database, config.username, config.password, config);
-var db        = {};
+var Carrier, Category, Collector, Issue, Keyword, Language, Pattern, Record;
+var models = {}
 
-fs
-  .readdirSync(__dirname)
-  .filter(function(file) {
-    return (file.indexOf(".") !== 0) && (file !== basename);
-  })
-  .forEach(function(file) {
-    var model = sequelize["import"](path.join(__dirname, file));
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(function(modelName) {
-  if ("associate" in db[modelName]) {
-    db[modelName].associate(db);
+var knex = require('knex')({
+  client: 'pg',
+  connection: {
+    host     : '127.0.0.1',
+    user     : config.username,
+    password : config.password,
+    database : config.database,
+    charset  : 'utf8'
   }
 });
 
-db.Datum.belongsTo(db.Carrier);
-db.Datum.belongsTo(db.Issue);
-db.Datum.belongsTo(db.Category);
-db.Datum.belongsTo(db.Collector);
-db.Datum.belongsTo(db.Language);
-db.Datum.belongsTo(db.Pattern);
-db.Datum.belongsTo(db.Carrier);
-db.Datum.belongsToMany(db.Keyword, { through: db.DatumKeyword })
-db.Keyword.belongsToMany(db.Datum, { through: db.DatumKeyword })
+var bookshelf = require('bookshelf')(knex);
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+var Carrier = bookshelf.Model.extend({
+  tableName: 'carriers',
+  records: function (){
+    return this.hasMany(Record);
+  }
+});
 
-module.exports = db;
+var Category = bookshelf.Model.extend({
+  tableName: 'categories',
+  records: function (){
+    return this.hasMany(Record);
+  }
+});
+var Collector = bookshelf.Model.extend({
+  tableName: 'collectors',
+  records: function (){
+    return this.hasMany(Record);
+  }
+});
+var Issue = bookshelf.Model.extend({
+  tableName: 'issues',
+  records: function (){
+    return this.hasMany(Record);
+  }
+});
+var Keyword = bookshelf.Model.extend({
+  tableName: 'keywords',
+  records: function (){
+    return this.belongsToMany(Record);
+  }
+});
+var Language = bookshelf.Model.extend({
+  tableName: 'languages',
+  records: function (){
+    return this.hasMany(Record);
+  }
+});
+var Pattern = bookshelf.Model.extend({
+  tableName: 'patterns',
+  records: function (){
+    return this.hasMany(Record);
+  }
+});
+var Record = bookshelf.Model.extend({
+  tableName: 'records',
+  category: function (){
+    return this.belongsTo(Category);
+  },
+  carrier: function (){
+    return this.belongsTo(Carrier);
+  },
+  collector: function (){
+    return this.belongsTo(Collector);
+  },
+  issue: function (){
+    return this.belongsTo(Issue);
+  },
+  language: function (){
+    return this.belongsTo(Language);
+  },
+  pattern: function (){
+    return this.belongsTo(Pattern);
+  },
+  keywords: function (){
+    return this.belongsToMany(Keyword);
+  },
+});
+
+module.exports = {
+  Carrier: Carrier,
+  Category: Category,
+  Collector: Collector,
+  Issue: Issue,
+  Keyword: Keyword,
+  Language: Language,
+  Pattern: Pattern,
+  Record: Record,
+  knex: knex
+}

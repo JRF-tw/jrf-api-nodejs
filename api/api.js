@@ -1,9 +1,8 @@
 var api = require("express").Router({caseSensitive: true, strict: true});
 var models  = require('../models');
-var Sequelize = require('sequelize')
 
-function filterResult(data) {
-  var result = data.map(function (d) {
+function filterResult(record) {
+  var result = record.map(function (d) {
     return {
       id: d.id,
       title: d.title,
@@ -13,7 +12,7 @@ function filterResult(data) {
   return result;
 }
 
-api.get('/data/', function (req, res, next) {
+api.get('/records/', function (req, res, next) {
   var query = req.query.query;
   var offset = req.query.offset;
   var limit = req.query.limit;
@@ -22,103 +21,97 @@ api.get('/data/', function (req, res, next) {
   }
   if (!query) {
     if (limit) {
-      return models.Datum.findAndCountAll({ offset: offset, limit: limit, include: [models.Carrier, models.Category, models.Collector, models.Issue, models.Language, models.Keyword, models.Language, models.Pattern] })
-        .then(function(data, err){
-          if (err) {
-            return console.log(err);
-          }
-          return res.json({
-            status: "success",
-            data: data.rows,
-            count: data.count
-          });
-        });
-    } else {
-      return models.Datum.findAndCountAll({
-        include: [models.Carrier, models.Category, models.Collector, models.Issue, models.Language, models.Keyword, models.Language, models.Pattern]
+      models.Record.query(function(qb) {
+        qb.limit(limit).offset(offset)
       })
-        .then(function(data, err){
-          if (err) {
-            return console.log(err);
-          }
-          return res.json({
+      .fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .then(function(records){
+        models.knex('records').count('*').then(function(ret){
+          res.json({
             status: "success",
-            data: data.rows,
-            count: data.count
+            records: records.toJSON(),
+            count: parseInt(ret[0].count)
           });
         });
-      }
+      })
+    } else {
+      models.Record.fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .then(function(records){
+        models.knex('records').count('*').then(function(ret){
+          res.json({
+            status: "success",
+            records: records.toJSON(),
+            count: parseInt(ret[0].count)
+          });
+        });
+      });
+    }
   } else {
     query = '%' + query + '%';
     if (limit) {
-      return models.Datum.findAndCountAll({
-        where: Sequelize.or(
-            { title: { like: query }},
-            { content: { like: query }}
-          ),
-        offset: offset,
-        limit: limit,
-        include: [models.Carrier, models.Category, models.Collector, models.Issue, models.Language, models.Keyword, models.Language, models.Pattern]
-      }).then(function(data, err){
-          if (err) {
-            return console.log(err);
-          }
-          return res.json({
+      models.Record.query(function(qb) {
+        qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query).limit(limit).offset(offset)
+      })
+      .fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .then(function(records){
+        models.knex('records').count('*').then(function(ret){
+          res.json({
             status: "success",
-            data: data.rows,
-            count: data.count
+            records: records.toJSON(),
+            count: parseInt(ret[0].count)
           });
         });
+      })
     } else {
-      return models.Datum.findAndCountAll({
-        where: Sequelize.or(
-            { title: { like: query }},
-            { content: { like: query }}
-          ),
-        include: [models.Carrier, models.Category, models.Collector, models.Issue, models.Language, models.Keyword, models.Language, models.Pattern]
-        }).then(function(data, err){
-          if (err) {
-            return console.log(err);
-          }
-          console.log(data);
-          return res.json({
+      models.Record.query(function(qb) {
+        qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query)
+      })
+      .fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .then(function(records){
+        models.knex('records').count('*').then(function(ret){
+          res.json({
             status: "success",
-            data: data.rows,
-            count: data.count
+            record: records.toJSON(),
+            count: parseInt(ret[0].count)
           });
         });
-      }
+      })
     }
-  });
-api.get('/data/:id', function (req, res, next) {
+  }
+});
+api.get('/records/:id/', function (req, res, next) {
     var id = req.params.id
-    return models.Datum.find({
-        where: {id: id},
-        include: [models.Carrier, models.Category, models.Collector, models.Issue, models.Language, models.Keyword, models.Language, models.Pattern]
-      }).then(function(datum, err){
-        if (err) {
-          console.log(err);
-          res.json({
-            status: "failed",
-            error: err
+    if (isNaN(id)) {
+      new models.Record({identifier: id}).fetch()
+      .then(function(record) {
+        if(record) {
+          return res.json({
+            status: "success",
+            record: record.toJSON()
           });
-        }
-        if (!datum) {
-          console.log('not found');
-          res.json({
+        } else {
+          return res.json({
             status: "failed",
             error: 'not found'
           });
         }
-        return res.json({
-          status: "success",
-          data: {
-            id: datum.id,
-            title: datum.title,
-            content: datum.content
-          }
-        });
-      });
+      })
+    } else {
+      new models.Record({id: id}).fetch()
+      .then(function(record) {
+        if(record) {
+          return res.json({
+            status: "success",
+            record: record.toJSON()
+          });
+        } else {
+          return res.json({
+            status: "failed",
+            error: 'not found'
+          });
+        }
+      })
+    }
   });
 
 module.exports = api;
