@@ -1,16 +1,38 @@
 var api = require("express").Router({caseSensitive: true, strict: true});
 var models  = require('../models');
 
-function filterResult(record) {
-  var result = record.map(function (d) {
-    return {
-      id: d.id,
-      title: d.title,
-      content: d.content
-    };
-  });
-  return result;
+var filterRecord = function(record) {
+  console.log(record)
+  delete record["category_id"];
+  delete record["carrier_id"];
+  delete record["pattern_id"];
+  delete record["issue_id"];
+  delete record["language_id"];
+  delete record["collector_id"];
+  record["category"] = record["category"]["name"];
+  record["carrier"] = record["carrier"]["name"];
+  record["pattern"] = record["pattern"]["name"];
+  record["issue"] = record["issue"]["name"];
+  record["language"] = record["language"]["name"];
+  record["collector"] = record["collector"]["name"];
+  record["keywords"].forEach(function(keyword, index, keywords) {
+    keywords[index] = keyword["name"];
+  })
+  return record;
 }
+
+var filterRecords = function(records) {
+  if(!records) {
+    records = [];
+  } else {
+    records = records.toJSON();
+  }
+  records.forEach(function(record, index, records) {
+    records[index] = filterRecord(record);
+  })
+  return records;
+}
+
 
 api.get('/records/', function (req, res, next) {
   var query = req.query.query;
@@ -24,12 +46,12 @@ api.get('/records/', function (req, res, next) {
       models.Record.query(function(qb) {
         qb.limit(limit).offset(offset)
       })
-      .fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
       .then(function(records){
         models.knex('records').count('*').then(function(ret){
           res.json({
             status: "success",
-            records: records.toJSON(),
+            records: filterRecords(records),
             count: parseInt(ret[0].count)
           });
         });
@@ -40,7 +62,7 @@ api.get('/records/', function (req, res, next) {
         models.knex('records').count('*').then(function(ret){
           res.json({
             status: "success",
-            records: records.toJSON(),
+            records: filterRecords(records),
             count: parseInt(ret[0].count)
           });
         });
@@ -52,12 +74,13 @@ api.get('/records/', function (req, res, next) {
       models.Record.query(function(qb) {
         qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query).limit(limit).offset(offset)
       })
-      .fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
       .then(function(records){
+        console.log('length', records.length);
         models.knex('records').count('*').then(function(ret){
           res.json({
             status: "success",
-            records: records.toJSON(),
+            records: filterRecords(records),
             count: parseInt(ret[0].count)
           });
         });
@@ -66,12 +89,13 @@ api.get('/records/', function (req, res, next) {
       models.Record.query(function(qb) {
         qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query)
       })
-      .fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+      .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
       .then(function(records){
+        console.log('length', records.length);
         models.knex('records').count('*').then(function(ret){
           res.json({
             status: "success",
-            record: records.toJSON(),
+            record: filterRecords(records),
             count: parseInt(ret[0].count)
           });
         });
@@ -82,12 +106,12 @@ api.get('/records/', function (req, res, next) {
 api.get('/records/:id/', function (req, res, next) {
     var id = req.params.id
     if (isNaN(id)) {
-      new models.Record({identifier: id}).fetch()
+      new models.Record({identifier: id}).fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
       .then(function(record) {
         if(record) {
           return res.json({
             status: "success",
-            record: record.toJSON()
+            record: filterRecord(record.toJSON()),
           });
         } else {
           return res.json({
@@ -97,12 +121,12 @@ api.get('/records/:id/', function (req, res, next) {
         }
       })
     } else {
-      new models.Record({id: id}).fetch()
+      new models.Record({id: id}).fetch({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
       .then(function(record) {
         if(record) {
           return res.json({
             status: "success",
-            record: record.toJSON()
+            record: filterRecord(record.toJSON()),
           });
         } else {
           return res.json({
