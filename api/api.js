@@ -2,7 +2,7 @@ var api = require("express").Router({caseSensitive: true, strict: true});
 var models  = require('../models');
 
 var filterRecord = function (record) {
-  console.log(record)
+  //console.log(record)
   delete record["category_id"];
   delete record["carrier_id"];
   delete record["pattern_id"];
@@ -42,65 +42,34 @@ api.get('/records/', function (req, res, next) {
     offset = 0;
   }
   if (!query) {
-    if (limit) {
-      models.Record.query(function (qb) {
-        qb.limit(limit).offset(offset)
-      })
-      .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
-      .then(function (records){
-        models.knex('records').count('*').then(function (ret){
-          res.json({
-            status: "success",
-            records: filterRecords(records),
-            count: parseInt(ret[0].count)
-          });
-        });
-      })
-    } else {
-      models.Record.fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
-      .then(function (records){
-        models.knex('records').count('*').then(function (ret){
-          res.json({
-            status: "success",
-            records: filterRecords(records),
-            count: parseInt(ret[0].count)
-          });
+    models.Record.query(function (qb) {
+      qb.limit(limit).offset(offset)
+    })
+    .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+    .then(function (records){
+      models.knex('records').count('*').then(function (ret){
+        res.json({
+          status: "success",
+          records: filterRecords(records),
+          count: parseInt(ret[0].count)
         });
       });
-    }
+    })
   } else {
     query = '%' + query + '%';
-    if (limit) {
-      models.Record.query(function (qb) {
-        qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query).limit(limit).offset(offset)
-      })
-      .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
-      .then(function (records){
-        console.log('length', records.length);
-        models.knex('records').count('*').then(function (ret){
-          res.json({
-            status: "success",
-            records: filterRecords(records),
-            count: parseInt(ret[0].count)
-          });
+    models.Record.query(function (qb) {
+      qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query).orWhere('catalog', 'LIKE', query).limit(limit).offset(offset)
+    })
+    .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
+    .then(function (records){
+      models.knex('records').count('*').where('title', 'LIKE', query).orWhere('content', 'LIKE', query).orWhere('catalog', 'LIKE', query).then(function (ret){
+        res.json({
+          status: "success",
+          records: filterRecords(records),
+          count: parseInt(ret[0].count)
         });
-      })
-    } else {
-      models.Record.query(function (qb) {
-        qb.where('title', 'LIKE', query).orWhere('content', 'LIKE', query)
-      })
-      .fetchAll({withRelated: ['category', 'carrier', 'collector', 'issue', 'language', 'pattern', 'keywords']})
-      .then(function (records){
-        console.log('length', records.length);
-        models.knex('records').count('*').then(function (ret){
-          res.json({
-            status: "success",
-            record: filterRecords(records),
-            count: parseInt(ret[0].count)
-          });
-        });
-      })
-    }
+      });
+    })
   }
 });
 api.get('/records/:id/', function (req, res, next) {
@@ -138,18 +107,85 @@ api.get('/records/:id/', function (req, res, next) {
   }
 });
 
-api.get('/keywords/'), function (req, res, next) {
-  var query = req.params.query;
+api.get('/keywords/', function (req, res, next) {
+  var query = req.query.query;
   var offset = req.query.offset;
   var limit = req.query.limit;
-}
-
-api.get('/keywords/:query/', function (req, res, next) {
-  var query = req.params.query;
-  var offset = req.query.offset;
-  var limit = req.query.limit;
-  if (isNaN(query)) {
+  if (query) {
     query = '%' + query + '%'
+    models.Keyword.query(function (qb) {
+      qb.where('name', 'LIKE', query).limit(limit).offset(offset)
+    })
+    .fetchAll()
+    .then(function (keywords){
+      models.knex('keywords').count('*').where('name', 'LIKE', query).then(function (ret){
+        res.json({
+          status: "success",
+          keywords: keywords.toJSON(),
+          count: parseInt(ret[0].count)
+        });
+      });
+    })
+
+  } else {
+    models.Keyword.query(function (qb) {
+      qb.limit(limit).offset(offset)
+    })
+    .fetchAll()
+    .then(function (keywords){
+      models.knex('keywords').count('*').then(function (ret){
+        res.json({
+          status: "success",
+          keywords: keywords.toJSON(),
+          count: parseInt(ret[0].count)
+        });
+      });
+    })
+  }
+});
+
+api.get('/keywords/:id/', function (req, res, next) {
+  var id = req.params.id;
+  if (isNaN(id)) {
+    new models.Keyword({name: id}).fetch()
+    .then(function (keyword) {
+      if(keyword) {
+        return res.json({
+          status: "success",
+          keyword: keyword.toJSON(),
+        });
+      } else {
+        return res.json({
+          status: "failed",
+          error: 'not found'
+        });
+      }
+    })
+  } else {
+    new models.Keyword({id: id}).fetch()
+    .then(function (keyword) {
+      if(keyword) {
+        return res.json({
+          status: "success",
+          keyword: keyword.toJSON(),
+        });
+      } else {
+        return res.json({
+          status: "failed",
+          error: 'not found'
+        });
+      }
+    })
+  }
+
+});
+
+api.get('/keywords/:id/records/', function (req, res, next) {
+  var id = req.params.id;
+  var offset = req.query.offset;
+  var limit = req.query.limit;
+  if (isNaN(id)) {
+    var query = '%' + id + '%'
     models.knex.raw("SELECT keywords_records.record_id \
       FROM keywords_records INNER JOIN keywords ON keywords_records.keyword_id = keywords.id \
       WHERE keywords.name LIKE ? \
@@ -183,7 +219,7 @@ api.get('/keywords/:query/', function (req, res, next) {
     models.knex.raw("SELECT keywords_records.record_id \
       FROM keywords_records INNER JOIN keywords ON keywords_records.keyword_id = keywords.id \
       WHERE keywords.id = ? \
-      GROUP BY keywords_records.record_id;", [query])
+      GROUP BY keywords_records.record_id;", [id])
     .then(function (ret){
       ret = ret.rows
       if(!ret) {
