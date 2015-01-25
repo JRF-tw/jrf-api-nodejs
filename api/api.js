@@ -9,14 +9,18 @@ var filterRecord = function (record) {
   delete record["issue_id"];
   delete record["language_id"];
   delete record["collector_id"];
+  /*
   record["category"] = record["category"]["name"];
   record["carrier"] = record["carrier"]["name"];
   record["pattern"] = record["pattern"]["name"];
   record["issue"] = record["issue"]["name"];
   record["language"] = record["language"]["name"];
   record["collector"] = record["collector"]["name"];
+  */
   record["keywords"].forEach(function (keyword, index, keywords) {
-    keywords[index] = keyword["name"];
+    //keywords[index] = keyword["name"];
+    delete keywords[index]["_pivot_record_id"];
+    delete keywords[index]["_pivot_keyword_id"];
   })
   return record;
 }
