@@ -141,7 +141,7 @@ function parse_data( date_string ){
 
 var line_work = function(line){
   //console.log(line);
-  return function(){
+  return Promise.method(function(){
     var record_line = JSON.parse(line);
     //console.log(record_line);
     models.Record.forge({
@@ -193,7 +193,7 @@ var line_work = function(line){
     }).done(function(record){
       consoel.log(record);
     });
-  }
+  });
 };
 
 exports.seed = function(models, Promise) {
