@@ -209,7 +209,7 @@ exports.seed = function(models, Promise) {
     });
   }).each(function(line){
     line_work(line)();
-  });
+  }).done(function(){ console.log('done'); });
 };
 exports.seed(models, Promise);
 
