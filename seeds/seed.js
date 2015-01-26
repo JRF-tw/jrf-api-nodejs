@@ -7,8 +7,9 @@ var stream = require('stream');
 var models = require("../models");
 
 var add_category = function(record, category_name){
+  console.log('category', record);
   if (category_name) {
-      new models.Category({name: category_name}).fetch()
+      return new models.Category({name: category_name}).fetch()
         .then(function(category) {
           if (category) {
             record.save({category_id: category.id})
@@ -27,8 +28,9 @@ var add_category = function(record, category_name){
 }
 
 var add_carrier = function(record, carrier_name){
+  console.log('carrier', record);
   if (carrier_name) {
-      new models.Carrier({name: carrier_name}).fetch()
+      return new models.Carrier({name: carrier_name}).fetch()
         .then(function(carrier) {
           if (carrier) {
             record.save({carrier_id: carrier.id})
@@ -47,8 +49,9 @@ var add_carrier = function(record, carrier_name){
 }
 
 var add_pattern = function(record, pattern_name){
+  console.log('pattern', record);
   if (pattern_name) {
-      new models.Pattern({name: pattern_name}).fetch()
+      return new models.Pattern({name: pattern_name}).fetch()
         .then(function(pattern) {
           if (pattern) {
             record.save({pattern_id: pattern.id})
@@ -67,8 +70,9 @@ var add_pattern = function(record, pattern_name){
 }
 
 var add_issue = function(record, issue_name){
+  console.log('issue', record);
   if (issue_name) {
-      new models.Issue({name: issue_name}).fetch()
+      return new models.Issue({name: issue_name}).fetch()
         .then(function(issue) {
           if (issue) {
             record.save({issue_id: issue.id})
@@ -87,8 +91,9 @@ var add_issue = function(record, issue_name){
 }
 
 var add_language = function(record, language_name){
+  console.log('language', record);
   if (language_name) {
-      new models.Language({name: language_name}).fetch()
+      return new models.Language({name: language_name}).fetch()
         .then(function(language) {
           if (language) {
             record.save({language_id: language.id})
@@ -107,8 +112,9 @@ var add_language = function(record, language_name){
 }
 
 var add_collector = function(record, collector_name){
+  console.log('collector', record);
   if (collector_name) {
-      new models.Collector({name: collector_name}).fetch()
+      return new models.Collector({name: collector_name}).fetch()
         .then(function(collector) {
           if (collector) {
             record.save({collector_id: collector.id})
@@ -127,6 +133,7 @@ var add_collector = function(record, collector_name){
 }
 
 var add_keywords = function(record, keywords_list){
+  console.log('keyword', record);
   keywords_list = keywords_list.split("、");
   Promise.each(keywords_list, function(k) {
     new models.Keyword({name: k}).fetch()
