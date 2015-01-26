@@ -7,153 +7,132 @@ var stream = require('stream');
 var models = require("../models");
 
 var add_category = Promise.method(function(record, category_name){
-  console.log('category', record);
   if (category_name) {
       return new models.Category({name: category_name}).fetch()
         .then(function(category) {
           if (category) {
-            record.save({category_id: category.id})
-            .then(function(){return record;})
+            return record.save({category_id: category.id});
           } else {
             models.Category.forge({name: category_name}).save()
               .then(function(category) {
-                record.save({category_id: category.id})
-                .then(function(){return record;})
+                return record.save({category_id: category.id});
               });
           }
-      }).then(function(){return record;})
+      });
   } else {
     return record;
   }
 });
 
 var add_carrier = Promise.method(function(record, carrier_name){
-  console.log('carrier', record);
   if (carrier_name) {
       return new models.Carrier({name: carrier_name}).fetch()
         .then(function(carrier) {
           if (carrier) {
-            record.save({carrier_id: carrier.id})
-            .then(function(){return record;})
+            return record.save({carrier_id: carrier.id});
           } else {
             models.Carrier.forge({name: carrier_name}).save()
               .then(function(carrier) {
-                record.save({carrier_id: carrier.id})
-                .then(function(){return record;})
+                return record.save({carrier_id: carrier.id});
               });
           }
-      }).then(function(){return record;})
+      });
   } else {
     return record;
   }
 });
 
 var add_pattern = Promise.method(function(record, pattern_name){
-  console.log('pattern', record);
   if (pattern_name) {
       return new models.Pattern({name: pattern_name}).fetch()
         .then(function(pattern) {
           if (pattern) {
-            record.save({pattern_id: pattern.id})
-            .then(function(){return record;})
+            return record.save({pattern_id: pattern.id});
           } else {
             models.Pattern.forge({name: pattern_name}).save()
               .then(function(pattern) {
-                record.save({pattern_id: pattern.id})
-                .then(function(){return record;})
+                return record.save({pattern_id: pattern.id});
               });
           }
-      }).then(function(){return record;})
+      });
   } else {
     return record;
   }
 });
 
 var add_issue = Promise.method(function(record, issue_name){
-  console.log('issue', record);
   if (issue_name) {
       return new models.Issue({name: issue_name}).fetch()
         .then(function(issue) {
           if (issue) {
-            record.save({issue_id: issue.id})
-            .then(function(){return record;})
+            return record.save({issue_id: issue.id});
           } else {
             models.Issue.forge({name: issue_name}).save()
               .then(function(issue) {
-                record.save({issue_id: issue.id})
-                .then(function(){return record;})
+                return record.save({issue_id: issue.id});
               });
           }
-      }).then(function(){return record;})
+      });
   } else {
     return record;
   }
 });
 
 var add_language = Promise.method(function(record, language_name){
-  console.log('language', record);
   if (language_name) {
       return new models.Language({name: language_name}).fetch()
         .then(function(language) {
           if (language) {
-            record.save({language_id: language.id})
-            .then(function(){return record;})
+            return record.save({language_id: language.id});
           } else {
             models.Language.forge({name: language_name}).save()
               .then(function(language) {
-                record.save({language_id: language.id})
-                .then(function(){return record;})
+                return record.save({language_id: language.id});
               });
           }
-      }).then(function(){return record;})
+      });
   } else {
     return record;
   }
 });
 
 var add_collector = Promise.method(function(record, collector_name){
-  console.log('collector', record);
   if (collector_name) {
       return new models.Collector({name: collector_name}).fetch()
         .then(function(collector) {
           if (collector) {
-            record.save({collector_id: collector.id})
-            .then(function(){return record;})
+            return record.save({collector_id: collector.id});
           } else {
             models.Collector.forge({name: collector_name}).save()
               .then(function(collector) {
-                record.save({collector_id: collector.id})
-                .then(function(){return record;})
+                return record.save({collector_id: collector.id});
               });
           }
-      }).then(function(){return record;})
+      });
   } else {
     return record;
   }
 });
 
 var add_keywords = Promise.method(function(record, keywords_list){
-  console.log('keyword', record);
   keywords_list = keywords_list.split("、");
   Promise.each(keywords_list, function(k) {
-    new models.Keyword({name: k}).fetch()
+    return new models.Keyword({name: k}).fetch()
       .then(function(keyword){
         if (keyword) {
-          record.keywords().attach(keyword)
-          .then(function(){return record;})
+          return record.keywords().attach(keyword);
         } else {
           models.Keyword.forge({name: k}).save()
           .then(function(keyword) {
-            record.keywords().attach(keyword)
-            .then(function(){return record;})
+            return record.keywords().attach(keyword);
           })
         }
-      })
-  }).then(function(){return record;})
+      });
+  }).then(function(record){return record;});
 });
 
 function parse_data( date_string ){
-  console.log(date_string);
+  //console.log(date_string);
   return new Date(date_string);
 }
 
@@ -164,7 +143,7 @@ var line_work = function(line){
   //console.log(line);
   return function(){
     var record_line = JSON.parse(line);
-    console.log(record_line);
+    //console.log(record_line);
     models.Record.forge({
       identifier : record_line[3],
       sensitive : (record_line[4] ? true : false),
