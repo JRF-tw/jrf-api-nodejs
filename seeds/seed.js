@@ -190,7 +190,7 @@ var line_work = function(line){
       return add_keywords(record, record_line[17]);
     }).catch(function(err){
       console.log(err);
-    }).done(fucntion(record){
+    }).done(function(record){
       consoel.log(record);
     });
   }
