@@ -11,15 +11,19 @@ var add_category = function(record, category_name){
       new models.Category({name: category_name}).fetch()
         .then(function(category) {
           if (category) {
-            record.save({category_id: category.id});
+            record.save({category_id: category.id})
+            .then(function(){return record;})
           } else {
             models.Category.forge({name: category_name}).save()
               .then(function(category) {
-                record.save({category_id: category.id});
+                record.save({category_id: category.id})
+                .then(function(){return record;})
               });
           }
       });
-    }
+  } else {
+    return record;
+  }
 }
 
 var add_carrier = function(record, carrier_name){
@@ -27,15 +31,19 @@ var add_carrier = function(record, carrier_name){
       new models.Carrier({name: carrier_name}).fetch()
         .then(function(carrier) {
           if (carrier) {
-            record.save({carrier_id: carrier.id});
+            record.save({carrier_id: carrier.id})
+            .then(function(){return record;})
           } else {
             models.Carrier.forge({name: carrier_name}).save()
               .then(function(carrier) {
-                record.save({carrier_id: carrier.id});
+                record.save({carrier_id: carrier.id})
+                .then(function(){return record;})
               });
           }
       })
-    }
+  } else {
+    return record;
+  }
 }
 
 var add_pattern = function(record, pattern_name){
@@ -43,15 +51,19 @@ var add_pattern = function(record, pattern_name){
       new models.Pattern({name: pattern_name}).fetch()
         .then(function(pattern) {
           if (pattern) {
-            record.save({pattern_id: pattern.id});
+            record.save({pattern_id: pattern.id})
+            .then(function(){return record;})
           } else {
             models.Pattern.forge({name: pattern_name}).save()
               .then(function(pattern) {
-                record.save({pattern_id: pattern.id});
+                record.save({pattern_id: pattern.id})
+                .then(function(){return record;})
               });
           }
       })
-    }
+  } else {
+    return record;
+  }
 }
 
 var add_issue = function(record, issue_name){
@@ -59,15 +71,19 @@ var add_issue = function(record, issue_name){
       new models.Issue({name: issue_name}).fetch()
         .then(function(issue) {
           if (issue) {
-            record.save({issue_id: issue.id});
+            record.save({issue_id: issue.id})
+            .then(function(){return record;})
           } else {
             models.Issue.forge({name: issue_name}).save()
               .then(function(issue) {
-                record.save({issue_id: issue.id});
+                record.save({issue_id: issue.id})
+                .then(function(){return record;})
               });
           }
       })
-    }
+  } else {
+    return record;
+  }
 }
 
 var add_language = function(record, language_name){
@@ -75,15 +91,19 @@ var add_language = function(record, language_name){
       new models.Language({name: language_name}).fetch()
         .then(function(language) {
           if (language) {
-            record.save({language_id: language.id});
+            record.save({language_id: language.id})
+            .then(function(){return record;})
           } else {
             models.Language.forge({name: language_name}).save()
               .then(function(language) {
-                record.save({language_id: language.id});
+                record.save({language_id: language.id})
+                .then(function(){return record;})
               });
           }
       })
-    }
+  } else {
+    return record;
+  }
 }
 
 var add_collector = function(record, collector_name){
@@ -91,15 +111,19 @@ var add_collector = function(record, collector_name){
       new models.Collector({name: collector_name}).fetch()
         .then(function(collector) {
           if (collector) {
-            record.save({collector_id: collector.id});
+            record.save({collector_id: collector.id})
+            .then(function(){return record;})
           } else {
             models.Collector.forge({name: collector_name}).save()
               .then(function(collector) {
-                record.save({collector_id: collector.id});
+                record.save({collector_id: collector.id})
+                .then(function(){return record;})
               });
           }
       })
-    }
+  } else {
+    return record;
+  }
 }
 
 var add_keywords = function(record, keywords_list){
@@ -108,15 +132,17 @@ var add_keywords = function(record, keywords_list){
     new models.Keyword({name: k}).fetch()
       .then(function(keyword){
         if (keyword) {
-          record.keywords().attach(keyword);
+          record.keywords().attach(keyword)
+          .then(function(){return record;})
         } else {
           models.Keyword.forge({name: k}).save()
           .then(function(keyword) {
-            record.keywords().attach(keyword);
+            record.keywords().attach(keyword)
+            .then(function(){return record;})
           })
         }
       })
-  });
+  }).then(function(){return record;})
 }
 
 function parse_data( date_string ){
@@ -163,15 +189,19 @@ var line_work = function(line){
       updated_at : parse_data(record_line[35])
     }).save()
     .then(function(record) {
-      Promise.all([
-        add_category(record, record_line[0]),
-        add_carrier(record, record_line[1]),
-        add_pattern(record, record_line[2]),
-        add_issue(record, record_line[7]),
-        add_language(record, record_line[15]),
-        add_collector(record, record_line[21]),
-        add_keywords(record, record_line[17])
-      ]);
+      return add_category(record, record_line[0]);
+    }).then(function(record) {
+      return add_carrier(record, record_line[1]);
+    }).then(function(record) {
+      return add_pattern(record, record_line[2]);
+    }).then(function(record) {
+      return add_issue(record, record_line[7]);
+    }).then(function(record) {
+      return add_language(record, record_line[15]);
+    }).then(function(record) {
+      return add_collector(record, record_line[21]);
+    }).then(function(record) {
+      return add_keywords(record, record_line[17]);
     }).catch(function(err){
       console.log(err);
     }).done();
@@ -181,12 +211,19 @@ var line_work = function(line){
 exports.seed = function(models, Promise) {
   models.knex.raw('DELETE FROM keywords_records; DELETE FROM records;')
   .then(function(){
-    new lazy(fs.createReadStream('./seeds/data/data.json'))
-      .lines
-      .forEach(function(line){
-        Promise.all([line_work(line)()])
-      })
-  })
+    return new Promise(function(resolve) {
+        //Without new Promise, this throwing will throw an actual exception
+        var records_list = [];
+        new lazy(fs.createReadStream('./seeds/data/data.json'))
+          .lines
+          .forEach(function(line){
+            records_list.push(line)
+          })
+        resolve(records_list);
+    });
+  }).each(function(line){
+    line_work(line)();
+  });
 };
 exports.seed(models, Promise);
 
