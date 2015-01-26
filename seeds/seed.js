@@ -6,7 +6,7 @@ var readline = require('readline');
 var stream = require('stream');
 var models = require("../models");
 
-var add_category = function(record, category_name){
+var add_category = Promise.method(function(record, category_name){
   console.log('category', record);
   if (category_name) {
       return new models.Category({name: category_name}).fetch()
@@ -21,13 +21,13 @@ var add_category = function(record, category_name){
                 .then(function(){return record;})
               });
           }
-      });
+      }).then(function(){return record;})
   } else {
     return record;
   }
-}
+});
 
-var add_carrier = function(record, carrier_name){
+var add_carrier = Promise.method(function(record, carrier_name){
   console.log('carrier', record);
   if (carrier_name) {
       return new models.Carrier({name: carrier_name}).fetch()
@@ -42,13 +42,13 @@ var add_carrier = function(record, carrier_name){
                 .then(function(){return record;})
               });
           }
-      })
+      }).then(function(){return record;})
   } else {
     return record;
   }
-}
+});
 
-var add_pattern = function(record, pattern_name){
+var add_pattern = Promise.method(function(record, pattern_name){
   console.log('pattern', record);
   if (pattern_name) {
       return new models.Pattern({name: pattern_name}).fetch()
@@ -63,13 +63,13 @@ var add_pattern = function(record, pattern_name){
                 .then(function(){return record;})
               });
           }
-      })
+      }).then(function(){return record;})
   } else {
     return record;
   }
-}
+});
 
-var add_issue = function(record, issue_name){
+var add_issue = Promise.method(function(record, issue_name){
   console.log('issue', record);
   if (issue_name) {
       return new models.Issue({name: issue_name}).fetch()
@@ -84,13 +84,13 @@ var add_issue = function(record, issue_name){
                 .then(function(){return record;})
               });
           }
-      })
+      }).then(function(){return record;})
   } else {
     return record;
   }
-}
+});
 
-var add_language = function(record, language_name){
+var add_language = Promise.method(function(record, language_name){
   console.log('language', record);
   if (language_name) {
       return new models.Language({name: language_name}).fetch()
@@ -105,13 +105,13 @@ var add_language = function(record, language_name){
                 .then(function(){return record;})
               });
           }
-      })
+      }).then(function(){return record;})
   } else {
     return record;
   }
-}
+});
 
-var add_collector = function(record, collector_name){
+var add_collector = Promise.method(function(record, collector_name){
   console.log('collector', record);
   if (collector_name) {
       return new models.Collector({name: collector_name}).fetch()
@@ -126,13 +126,13 @@ var add_collector = function(record, collector_name){
                 .then(function(){return record;})
               });
           }
-      })
+      }).then(function(){return record;})
   } else {
     return record;
   }
-}
+});
 
-var add_keywords = function(record, keywords_list){
+var add_keywords = Promise.method(function(record, keywords_list){
   console.log('keyword', record);
   keywords_list = keywords_list.split("、");
   Promise.each(keywords_list, function(k) {
@@ -150,7 +150,7 @@ var add_keywords = function(record, keywords_list){
         }
       })
   }).then(function(){return record;})
-}
+});
 
 function parse_data( date_string ){
   console.log(date_string);
